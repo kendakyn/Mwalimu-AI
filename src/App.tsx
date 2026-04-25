@@ -7,7 +7,8 @@ import { useState, useRef, useEffect } from "react";
 import { 
   Send, BookOpen, MessageCircle, Settings2, Sparkles, User, Bot, Loader2, 
   ChevronRight, BrainCircuit, NotebookTabs, Home, GraduationCap, Languages,
-  Trash2, Plus, LayoutDashboard, Cpu, CheckCircle2, Circle, Volume2, VolumeX
+  Trash2, Plus, LayoutDashboard, Cpu, CheckCircle2, Circle, Volume2, VolumeX,
+  X, ChevronLeft
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import ReactMarkdown from "react-markdown";
@@ -174,7 +175,10 @@ export default function App() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to get AI response");
+        const customErr = new Error(errorData.error || "Failed to get AI response") as any;
+        customErr.details = errorData.details;
+        customErr.suggestion = errorData.suggestion;
+        throw customErr;
       }
 
       const data = await response.json();
@@ -195,7 +199,11 @@ export default function App() {
       }
     } catch (err: any) {
       console.error(err);
-      setMessages((prev) => [...prev, { role: "ai", text: err.message || "Pole sana rafiki, nimepata error kidogo. Let's try again!" }]);
+      let errorMsg = err.message || "Pole sana rafiki, nimepata error kidogo. Let's try again!";
+      if (err.details) {
+        errorMsg += ` (${err.details}: ${err.suggestion || ""})`;
+      }
+      setMessages((prev) => [...prev, { role: "ai", text: errorMsg }]);
     } finally {
       setLoading(false);
     }
@@ -352,7 +360,7 @@ export default function App() {
                         </div>
                       </div>
                       <div className="space-y-3">
-                         <label className="text-xs font-bold text-slate-400 uppercase tracking-tighter ml-1">Daily Study Target</label>
+                         <label className="text-xs font-bold text-slate-400 uppercase tracking-tighter ml-1">Lesson Duration</label>
                          <div className="flex items-center gap-4 bg-white/60 p-4 rounded-2xl shadow-sm">
                            <div className="flex flex-1 items-center gap-2">
                              <div className="flex flex-col gap-1">
@@ -426,10 +434,13 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="pt-6">
+              <div className="pt-6 pb-12">
                 <button 
-                  onClick={() => setCurrentPage("tutor")}
-                  className="w-full max-w-sm bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-5 rounded-[2rem] shadow-2xl shadow-cyan-200 flex items-center justify-center gap-3 group transition-transform active:scale-95 cursor-pointer"
+                  onClick={() => {
+                    setTutorMode("selection"); 
+                    setCurrentPage("tutor");
+                  }}
+                  className="w-full max-w-sm bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-5 rounded-[2rem] shadow-2xl shadow-cyan-200 flex items-center justify-center gap-3 group transition-transform active:scale-95 cursor-pointer hover:shadow-cyan-300 transform hover:-translate-y-1"
                 >
                   <BrainCircuit size={22} className="text-cyan-200" />
                   Jump into Tutoring
@@ -538,39 +549,39 @@ function TutorView({
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 1.05 }}
-        className="flex-1 flex flex-col items-center justify-center p-8 bg-white/30 backdrop-blur-3xl"
+        className="flex-1 flex flex-col items-center justify-start sm:justify-center p-6 md:p-12 bg-white/30 backdrop-blur-3xl overflow-y-auto"
       >
-        <div className="text-center mb-12">
-           <div className="w-24 h-24 bg-cyan-600 rounded-3xl flex items-center justify-center text-white mx-auto shadow-2xl mb-6">
-             <BrainCircuit size={48} />
+        <div className="text-center mb-8 md:mb-12">
+           <div className="w-16 h-16 md:w-24 md:h-24 bg-cyan-600 rounded-3xl flex items-center justify-center text-white mx-auto shadow-2xl mb-4 md:mb-6">
+             <BrainCircuit className="w-8 h-8 md:w-12 md:h-12" />
            </div>
-           <h2 className="text-4xl font-display font-black text-cyan-950 mb-4">Choose Your Session Type</h2>
-           <p className="text-cyan-700/60 font-bold">How would you like to learn {profile.subjects[0]} today?</p>
+           <h2 className="text-3xl md:text-4xl font-display font-black text-cyan-950 mb-2 md:mb-4">Choose Your Session Type</h2>
+           <p className="text-cyan-700/60 font-bold text-sm md:text-base">How would you like to learn {profile.subjects[0]} today?</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 w-full max-w-4xl px-4">
           <button 
             onClick={() => setTutorMode("lesson")}
-            className="group glass p-8 rounded-[3rem] text-left hover:bg-cyan-600 hover:text-white transition-all duration-500 shadow-2xl border-white/80 cursor-pointer"
+            className="group glass p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] text-left hover:bg-cyan-600 hover:text-white transition-all duration-500 shadow-xl border-white/80 cursor-pointer"
           >
-             <div className="w-14 h-14 bg-cyan-100 group-hover:bg-cyan-500 rounded-2xl flex items-center justify-center text-cyan-600 group-hover:text-white mb-6 transition-colors">
-               <GraduationCap size={32} />
+             <div className="w-10 h-10 md:w-14 md:h-14 bg-cyan-100 group-hover:bg-cyan-500 rounded-2xl flex items-center justify-center text-cyan-600 group-hover:text-white mb-4 md:mb-6 transition-colors">
+               <GraduationCap size={28} />
              </div>
-             <h3 className="text-2xl font-black mb-3">Complete Lesson</h3>
-             <p className="text-sm font-bold opacity-70 group-hover:opacity-90 leading-relaxed">
-               Dive deep into a structured topic with examples, analogies, and a summary. (Includes Audio & Teacher Animation)
+             <h3 className="text-xl md:text-2xl font-black mb-2 md:mb-3">Complete Lesson</h3>
+             <p className="text-xs md:text-sm font-bold opacity-70 group-hover:opacity-90 leading-relaxed">
+               Dive deep into a structured topic with examples, analogies, and a summary.
              </p>
           </button>
 
           <button 
             onClick={() => setTutorMode("question")}
-            className="group glass p-8 rounded-[3rem] text-left hover:bg-slate-800 hover:text-white transition-all duration-500 shadow-2xl border-white/80 cursor-pointer"
+            className="group glass p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] text-left hover:bg-slate-800 hover:text-white transition-all duration-500 shadow-xl border-white/80 cursor-pointer"
           >
-             <div className="w-14 h-14 bg-slate-100 group-hover:bg-slate-600 rounded-2xl flex items-center justify-center text-slate-600 group-hover:text-white mb-6 transition-colors">
-               <MessageCircle size={32} />
+             <div className="w-10 h-10 md:w-14 md:h-14 bg-slate-100 group-hover:bg-slate-600 rounded-2xl flex items-center justify-center text-slate-600 group-hover:text-white mb-4 md:mb-6 transition-colors">
+               <MessageCircle size={28} />
              </div>
-             <h3 className="text-2xl font-black mb-3">Pose a Question</h3>
-             <p className="text-sm font-bold opacity-70 group-hover:opacity-90 leading-relaxed">
+             <h3 className="text-xl md:text-2xl font-black mb-2 md:mb-3">Pose a Question</h3>
+             <p className="text-xs md:text-sm font-bold opacity-70 group-hover:opacity-90 leading-relaxed">
                Got a quick concern? Get a precise, bolded answer with background context instantly.
              </p>
           </button>
@@ -578,9 +589,9 @@ function TutorView({
         
         <button 
           onClick={() => setCurrentPage("home")}
-          className="mt-12 text-cyan-600 font-black uppercase text-xs tracking-widest hover:underline"
+          className="mt-8 md:mt-12 mb-8 text-cyan-600 font-black uppercase text-xs tracking-widest hover:underline flex items-center gap-2"
         >
-           Cancel & Go Home
+           <X size={14} /> Cancel & Go Home
         </button>
       </motion.div>
     );
@@ -594,49 +605,57 @@ function TutorView({
       exit={{ opacity: 0 }}
       className="flex-1 flex flex-col h-full overflow-hidden"
     >
-      <header className="px-8 py-6 glass-heavy border-none flex items-center justify-between z-10">
-        <div className="flex items-center gap-6">
+      <header className="px-4 md:px-8 py-4 md:py-6 glass-heavy border-none flex items-center justify-between z-20 sticky top-0">
+        <div className="flex items-center gap-3 md:gap-6">
           <button 
             onClick={() => setTutorMode("selection")}
-            className="p-2 hover:bg-white/60 rounded-xl transition-colors cursor-pointer"
+            className="p-2 hover:bg-white/60 rounded-xl transition-colors cursor-pointer text-slate-400 hover:text-cyan-600"
+            title="Choose another mode"
           >
-            <Plus className="rotate-45 text-slate-400" />
+            <ChevronLeft size={24} />
           </button>
-          <div>
-            <h2 className="text-2xl font-display font-bold text-cyan-950 flex items-center gap-3">
+          <div className="hidden sm:block">
+            <h2 className="text-xl md:text-2xl font-display font-bold text-cyan-950 flex items-center gap-2 md:gap-3">
                {tutorMode === "lesson" ? <GraduationCap className="text-cyan-600" /> : <MessageCircle className="text-slate-600" />}
-               {tutorMode === "lesson" ? "Mwalimu Lesson" : "Quick Q&A"}
+               <span className="truncate">{tutorMode === "lesson" ? "Mwalimu Lesson" : "Quick Q&A"}</span>
             </h2>
             <div className="flex items-center gap-3 mt-1">
-               <p className="text-[10px] text-cyan-700 font-black uppercase tracking-[0.2em]">
+               <p className="text-[9px] md:text-[10px] text-cyan-700 font-black uppercase tracking-[0.2em] truncate">
                   {profile.subjects[0]} • {profile.specificLevel}
                </p>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
            <button 
              onClick={() => setAudioEnabled(!audioEnabled)}
-             className={`w-10 h-10 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+             className={`w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-all cursor-pointer ${
                audioEnabled ? "bg-cyan-600 text-white shadow-lg shadow-cyan-200" : "bg-slate-200 text-slate-500"
              }`}
              title={audioEnabled ? "Mute Bot" : "Unmute Bot"}
            >
-             {audioEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+             {audioEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
            </button>
            
            {isSpeaking && (
              <button 
                onClick={stopSpeech}
-               className="h-10 px-4 rounded-full bg-red-100 text-red-600 font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-red-200 transition-colors cursor-pointer"
+               className="h-9 md:h-10 px-3 md:px-4 rounded-full bg-red-100 text-red-600 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-red-200 transition-colors cursor-pointer"
              >
-               <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse" />
-               Stop Audio
+               <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-red-600 rounded-full animate-pulse" />
+               <span className="hidden xs:inline">Stop</span>
              </button>
            )}
 
-           <div className="bg-white/40 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/60 hidden sm:block">
-              <p className="text-xs font-bold text-cyan-600">{profile.languageMix}</p>
+           <button 
+             onClick={() => setCurrentPage("home")}
+             className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/60 flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors cursor-pointer sm:hidden"
+           >
+             <X size={20} />
+           </button>
+
+           <div className="bg-white/40 backdrop-blur-md px-3 md:px-4 py-1.5 md:py-2 rounded-2xl border border-white/60 hidden lg:block">
+              <p className="text-[10px] md:text-xs font-bold text-cyan-600">{profile.languageMix}</p>
            </div>
         </div>
       </header>

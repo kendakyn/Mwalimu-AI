@@ -45,6 +45,11 @@ async function startServer() {
   // 3. AI Tutor Endpoint with Security and Safety
   app.post("/api/tutor", limiter, async (req, res) => {
     try {
+      if (!process.env.GEMINI_API_KEY) {
+        console.error("CRITICAL: GEMINI_API_KEY is not set in environment variables.");
+        return res.status(500).json({ error: "Teacher is missing their key! Please check the API configuration." });
+      }
+
       const { input, profile, tutorMode } = req.body;
 
       // Input Validation
@@ -65,20 +70,22 @@ async function startServer() {
 
       // Quick greeting check for "hello" behavior
       const normalizedInput = input.trim().toLowerCase();
-      const greetings = ["hello", "hi", "mambo", "niaje", "hey", "hujambo", "sasa"];
-      if (greetings.includes(normalizedInput)) {
+      const greetings = ["hello", "hi", "mambo", "niaje", "hey", "hujambo", "sasa", "habari"];
+      const isGreeting = greetings.some(g => normalizedInput.includes(g)) && normalizedInput.length < 20;
+
+      if (isGreeting) {
         let greetingResponse = "";
         if (profile.languageMix === "Formal Swahili") {
-          greetingResponse = "Hujambo rafiki! Mimi ni Mwalimu AI. Tafadhali niambie mada unayotaka kusomea leo au niulize swali la STEM.";
+          greetingResponse = "Hujambo rafiki! Mimi ni Mwalimu AI. Napenda kukusaidia kusoma STEM. Tafadhali niambie mada unayotaka kusomea leo au niulize swali lolote la kisayansi.";
         } else if (profile.languageMix === "Mixed (Sheng/English)") {
-          greetingResponse = "Sasa rafiki! Naitwa Mode Mwalimu. Niambie ile topic unataka tuchase leo au niulize swali yoyote ya STEM. Ready ku-rock?";
+          greetingResponse = "Sasa rafiki! Naitwa Mode Mwalimu. Tuko pamoja kumsaka huyu STEM. Niambie ile topic unataka tuchase leo au niulize swali yoyote. Ready ku-rock?";
         } else {
-          greetingResponse = "Hello there! I am Teacher Mwalimu. Please provide a topic for our lesson or ask me any STEM-related question. I'm ready to help!";
+          greetingResponse = "Hello there! I am Teacher Mwalimu. I'm here to help you master STEM subjects. Please provide a topic for our lesson or ask me any question you have!";
         }
         return res.json({ text: greetingResponse });
       }
 
-      const modelId = "gemini-1.5-flash"; // Using stable flash for speed and safety
+      const modelId = "gemini-1.5-flash"; 
       
       let systemPrompt = "";
       if (tutorMode === "lesson") {
@@ -87,27 +94,27 @@ async function startServer() {
           You are 'Mwalimu AI', an expert educational STEM tutor for Kenyan students.
           Student Level: ${profile.educationLevel} (${profile.specificLevel})
           Subject: ${profile.subjects[0] || "General Science"}
-          Language: ${profile.languageMix}
+          Language Preference: ${profile.languageMix}
           
           AI SAFETY RULES:
-          1. ONLY answer STEM-related questions.
+          1. ONLY answer STEM-related questions (Math, Physics, Chemistry, Biology, CS, Aviation, Agriculture).
           2. Do NOT provide harmful, illegal, or inappropriate content.
           3. Keep responses age-appropriate for ${profile.educationLevel} students.
-          4. If the request is not related to STEM or is inappropriate, politely redirect to learning.
+          4. If the request is not related to STEM, politely redirect to learning.
 
           STRICT TIMING RULE:
           The lesson content MUST be concise enough to be presented in EXACTLY ${profile.studyHours} hours and ${profile.studyMinutes} minutes (Total: ${totalSeconds} seconds). 
 
           STRUCTURE:
-          ## 🧊 Lesson Content
-          ## 🌍 Real-world Example
+          ## 🧊 Lesson Content (Use Kenyan analogies e.g. matatus, mahindi, kiberiti)
+          ## 🌍 Practical Example
           ## 🎯 Practice Questions
           ## 🎯 Quick Check
           [NOTE]Brief plain text summary (no asterisks)[/NOTE]
         `;
       } else {
         systemPrompt = `
-          You are 'Mwalimu AI', answering a specific STEM question briefly.
+          You are 'Mwalimu AI', answering a specific STEM question briefly for a Kenyan student.
           Student Level: ${profile.educationLevel} (${profile.specificLevel})
           Subject: ${profile.subjects[0] || "General Science"}
           
@@ -117,14 +124,14 @@ async function startServer() {
 
           Format:
           ## Background Information
-          ## Answer (Bold important concepts)
+          ## Answer (Bold **important concepts**)
         `;
       }
 
       const result = await genAI.models.generateContent({
         model: modelId,
         config: {
-          systemInstruction: systemPrompt,
+          systemInstruction: { parts: [{ text: systemPrompt }] },
           safetySettings: [
             {
               category: HarmCategory.HARM_CATEGORY_HARASSMENT,
@@ -144,11 +151,9 @@ async function startServer() {
             },
           ],
         },
-        contents: [{ role: "user", parts: [{ text: input }] }]
+        contents: [input]
       });
 
-      // In @google/genai, the response text is typically accessed directly or via result.response.text()
-      // We will try multiple ways based on SDK variations
       const text = result.text || "";
 
       // Output Validation (Is it educational?)
@@ -160,7 +165,12 @@ async function startServer() {
       res.json({ text });
     } catch (error: any) {
       console.error("AI Error Details:", error);
-      res.status(500).json({ error: "Pole sana, the AI system is resting. Try again in a minute!" });
+      const errorMessage = error?.message || "Unknown AI error";
+      res.status(500).json({ 
+        error: "Pole sana, the AI system is resting.",
+        details: errorMessage.includes("API_KEY") ? "API Key issue" : "System glitch",
+        suggestion: "Check if your Gemini API key is correctly set in the environment."
+      });
     }
   });
 
