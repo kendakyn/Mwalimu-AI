@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import ReactMarkdown from "react-markdown";
+import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from "@google/genai";
 
 // --- Constants ---
 const AVAILABLE_SUBJECTS = [
@@ -167,23 +168,88 @@ export default function App() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/tutor", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ input: currentInput, profile, tutorMode })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        const customErr = new Error(errorData.error || "Failed to get AI response") as any;
-        customErr.details = errorData.details;
-        customErr.suggestion = errorData.suggestion;
-        throw customErr;
+      const modelId = "gemini-3-flash-preview"; 
+      
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        throw new Error("Gemini API key is not configured. Please check the Secrets tab.");
       }
 
-      const data = await response.json();
-      const responseText = data.text || "";
+      const genAI = new GoogleGenAI({ apiKey });
       
+      let systemPrompt = "";
+      if (tutorMode === "lesson") {
+        const totalSeconds = (profile.studyHours * 3600) + (profile.studyMinutes * 60);
+        systemPrompt = `
+          You are 'Mwalimu AI', an expert educational STEM tutor for Kenyan students.
+          Student Level: ${profile.educationLevel} (${profile.specificLevel})
+          Subject: ${profile.subjects[0] || "General Science"}
+          Language Preference: ${profile.languageMix}
+          
+          AI SAFETY RULES:
+          1. ONLY answer STEM-related questions (Math, Physics, Chemistry, Biology, CS, Aviation, Agriculture).
+          2. Do NOT provide harmful, illegal, or inappropriate content.
+          3. Keep responses age-appropriate for ${profile.educationLevel} students.
+          4. If the request is not related to STEM, politely redirect to learning.
+
+          STRICT TIMING RULE:
+          The lesson content MUST be concise enough to be presented in EXACTLY ${profile.studyHours} hours and ${profile.studyMinutes} minutes (Total: ${totalSeconds} seconds). 
+
+          STRUCTURE:
+          ## 🧊 Lesson Content (Use Kenyan analogies e.g. matatus, mahindi, kiberiti)
+          ## 🌍 Practical Example
+          ## 🎯 Practice Questions
+          ## 🎯 Quick Check
+          [NOTE]Brief plain text summary (no asterisks)[/NOTE]
+        `;
+      } else {
+        systemPrompt = `
+          You are 'Mwalimu AI', answering a specific STEM question briefly for a Kenyan student.
+          Student Level: ${profile.educationLevel} (${profile.specificLevel})
+          Subject: ${profile.subjects[0] || "General Science"}
+          
+          AI SAFETY RULES:
+          1. ONLY answer STEM-related questions.
+          2. Stay educational and professional.
+
+          Format:
+          ## Background Information
+          ## Answer (Bold **important concepts**)
+        `;
+      }
+
+      const result = await genAI.models.generateContent({
+        model: modelId,
+        config: {
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          safetySettings: [
+            {
+              category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+              threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+            },
+            {
+              category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+              threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+            },
+            {
+              category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+              threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+            },
+            {
+              category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+              threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+            },
+          ],
+        },
+        contents: [currentInput]
+      });
+
+      const responseText = result.text || "";
+      
+      if (responseText.length < 2) {
+        throw new Error("Mwalimu AI is gathering thoughts. Please try rephrasing your topic.");
+      }
+
       const noteMatch = responseText.match(/\[NOTE\](.*?)\[\/NOTE\]/s);
       if (noteMatch && tutorMode === "lesson") {
         const noteContent = noteMatch[1].trim();
