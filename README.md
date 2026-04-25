@@ -24,6 +24,7 @@ The AI adapts to your level:
 - **Education Level**: Secondary, University, etc.
 - **Specific Level**: E.g., Form 4, Year 1.
 - **Study Session Timers**: The AI respects your study plan, delivering content that fits within your allocated hours and minutes.
+- **Subject personalization**: The system detects the subject chosen each time. The answers given either in the Complete lesson or the Q&A section, the system gives output based on that specific subject.
 
 ### 5. STEM Excellence
 Specialized support for:
