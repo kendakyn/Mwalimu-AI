@@ -615,50 +615,52 @@ function TutorView({
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 1.05 }}
-        className="flex-1 flex flex-col items-center justify-start sm:justify-center p-6 md:p-12 bg-white/30 backdrop-blur-3xl overflow-y-auto"
+        className="flex-1 flex flex-col p-4 md:p-12 bg-white/30 backdrop-blur-3xl overflow-y-auto scrollbar-hide pt-16 md:pt-20"
       >
-        <div className="text-center mb-8 md:mb-12">
-           <div className="w-16 h-16 md:w-24 md:h-24 bg-cyan-600 rounded-3xl flex items-center justify-center text-white mx-auto shadow-2xl mb-4 md:mb-6">
-             <BrainCircuit className="w-8 h-8 md:w-12 md:h-12" />
-           </div>
-           <h2 className="text-3xl md:text-4xl font-display font-black text-cyan-950 mb-2 md:mb-4">Choose Your Session Type</h2>
-           <p className="text-cyan-700/60 font-bold text-sm md:text-base">How would you like to learn {profile.subjects[0]} today?</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 w-full max-w-4xl px-4">
-          <button 
-            onClick={() => setTutorMode("lesson")}
-            className="group glass p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] text-left hover:bg-cyan-600 hover:text-white transition-all duration-500 shadow-xl border-white/80 cursor-pointer"
-          >
-             <div className="w-10 h-10 md:w-14 md:h-14 bg-cyan-100 group-hover:bg-cyan-500 rounded-2xl flex items-center justify-center text-cyan-600 group-hover:text-white mb-4 md:mb-6 transition-colors">
-               <GraduationCap size={28} />
+        <div className="w-full max-w-4xl mx-auto flex-1 flex flex-col items-center justify-center">
+          <div className="text-center mb-8 md:mb-16">
+             <div className="w-20 h-20 md:w-28 md:h-28 bg-cyan-600 rounded-[2rem] flex items-center justify-center text-white mx-auto shadow-2xl mb-6 md:mb-8 transform -rotate-3">
+               <BrainCircuit className="w-10 h-10 md:w-14 md:h-14" />
              </div>
-             <h3 className="text-xl md:text-2xl font-black mb-2 md:mb-3">Complete Lesson</h3>
-             <p className="text-xs md:text-sm font-bold opacity-70 group-hover:opacity-90 leading-relaxed">
-               Dive deep into a structured topic with examples, analogies, and a summary.
-             </p>
-          </button>
-
+             <h2 className="text-3xl md:text-5xl font-display font-black text-cyan-950 mb-3 md:mb-5 tracking-tight">Choose Your Session Type</h2>
+             <p className="text-cyan-700/60 font-bold text-sm md:text-xl">How would you like to master <span className="text-cyan-600">{profile.subjects[0]}</span> today?</p>
+          </div>
+  
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-10 w-full px-4 mb-20">
+            <button 
+              onClick={() => setTutorMode("lesson")}
+              className="group glass p-8 md:p-10 rounded-[2.5rem] md:rounded-[3.5rem] text-left hover:bg-cyan-600 hover:text-white transition-all duration-500 shadow-xl border-white/80 cursor-pointer transform hover:-translate-y-2"
+            >
+               <div className="w-14 h-14 md:w-16 md:h-16 bg-cyan-100 group-hover:bg-cyan-500 rounded-2xl flex items-center justify-center text-cyan-600 group-hover:text-white mb-6 transition-colors shadow-inner">
+                 <GraduationCap size={32} />
+               </div>
+               <h3 className="text-2xl md:text-3xl font-black mb-3 md:mb-4">Complete Lesson</h3>
+               <p className="text-xs md:text-base font-bold opacity-70 group-hover:opacity-90 leading-relaxed uppercase tracking-tighter">
+                 Deep dive into topics with Kenyan analogies, examples, and summaries.
+               </p>
+            </button>
+  
+            <button 
+              onClick={() => setTutorMode("question")}
+              className="group glass p-8 md:p-10 rounded-[2.5rem] md:rounded-[3.5rem] text-left hover:bg-slate-900 hover:text-white transition-all duration-500 shadow-xl border-white/80 cursor-pointer transform hover:-translate-y-2"
+            >
+               <div className="w-14 h-14 md:w-16 md:h-16 bg-slate-100 group-hover:bg-slate-700 rounded-2xl flex items-center justify-center text-slate-600 group-hover:text-white mb-6 transition-colors shadow-inner">
+                 <MessageCircle size={32} />
+               </div>
+               <h3 className="text-2xl md:text-3xl font-black mb-3 md:mb-4">Pose a Question</h3>
+               <p className="text-xs md:text-base font-bold opacity-70 group-hover:opacity-90 leading-relaxed uppercase tracking-tighter">
+                 Quick concern? Get precise answers with deep background context.
+               </p>
+            </button>
+          </div>
+          
           <button 
-            onClick={() => setTutorMode("question")}
-            className="group glass p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] text-left hover:bg-slate-800 hover:text-white transition-all duration-500 shadow-xl border-white/80 cursor-pointer"
+            onClick={() => setCurrentPage("home")}
+            className="mb-12 bg-white/60 hover:bg-red-50 text-slate-400 hover:text-red-500 px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-widest transition-all flex items-center gap-2 border border-white/80 cursor-pointer shadow-sm"
           >
-             <div className="w-10 h-10 md:w-14 md:h-14 bg-slate-100 group-hover:bg-slate-600 rounded-2xl flex items-center justify-center text-slate-600 group-hover:text-white mb-4 md:mb-6 transition-colors">
-               <MessageCircle size={28} />
-             </div>
-             <h3 className="text-xl md:text-2xl font-black mb-2 md:mb-3">Pose a Question</h3>
-             <p className="text-xs md:text-sm font-bold opacity-70 group-hover:opacity-90 leading-relaxed">
-               Got a quick concern? Get a precise, bolded answer with background context instantly.
-             </p>
+             <X size={16} /> Cancel & Go Home
           </button>
         </div>
-        
-        <button 
-          onClick={() => setCurrentPage("home")}
-          className="mt-8 md:mt-12 mb-8 text-cyan-600 font-black uppercase text-xs tracking-widest hover:underline flex items-center gap-2"
-        >
-           <X size={14} /> Cancel & Go Home
-        </button>
       </motion.div>
     );
   }
@@ -671,22 +673,23 @@ function TutorView({
       exit={{ opacity: 0 }}
       className="flex-1 flex flex-col h-full overflow-hidden"
     >
-      <header className="px-4 md:px-8 py-4 md:py-6 glass-heavy border-none flex items-center justify-between z-20 sticky top-0">
+      <header className="px-4 md:px-8 pt-8 md:pt-10 pb-4 md:pb-6 glass-heavy border-none flex items-center justify-between z-30 sticky top-0 shrink-0">
         <div className="flex items-center gap-3 md:gap-6">
           <button 
             onClick={() => setTutorMode("selection")}
-            className="p-2 hover:bg-white/60 rounded-xl transition-colors cursor-pointer text-slate-400 hover:text-cyan-600"
+            className="p-2.5 hover:bg-white/60 rounded-xl transition-colors cursor-pointer text-slate-400 hover:text-cyan-600 bg-white/40 border border-white/60 shadow-sm"
             title="Choose another mode"
           >
-            <ChevronLeft size={24} />
+            <ChevronLeft size={22} />
           </button>
-          <div className="hidden sm:block">
-            <h2 className="text-xl md:text-2xl font-display font-bold text-cyan-950 flex items-center gap-2 md:gap-3">
-               {tutorMode === "lesson" ? <GraduationCap className="text-cyan-600" /> : <MessageCircle className="text-slate-600" />}
+          <div className="flex flex-col">
+            <h2 className="text-lg md:text-xl font-display font-black text-cyan-950 flex items-center gap-2">
+               {tutorMode === "lesson" ? <GraduationCap size={20} className="text-cyan-600" /> : <MessageCircle size={20} className="text-slate-600" />}
                <span className="truncate">{tutorMode === "lesson" ? "Mwalimu Lesson" : "Quick Q&A"}</span>
             </h2>
-            <div className="flex items-center gap-3 mt-1">
-               <p className="text-[9px] md:text-[10px] text-cyan-700 font-black uppercase tracking-[0.2em] truncate">
+            <div className="flex items-center gap-2 mt-0.5">
+               <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
+               <p className="text-[9px] md:text-[10px] text-cyan-700/60 font-black uppercase tracking-[0.2em] truncate">
                   {profile.subjects[0]} • {profile.specificLevel}
                </p>
             </div>
@@ -695,32 +698,33 @@ function TutorView({
         <div className="flex items-center gap-2 md:gap-4">
            <button 
              onClick={() => setAudioEnabled(!audioEnabled)}
-             className={`w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+             className={`w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center transition-all cursor-pointer ${
                audioEnabled ? "bg-cyan-600 text-white shadow-lg shadow-cyan-200" : "bg-slate-200 text-slate-500"
              }`}
              title={audioEnabled ? "Mute Bot" : "Unmute Bot"}
            >
-             {audioEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+             {audioEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
            </button>
            
            {isSpeaking && (
              <button 
                onClick={stopSpeech}
-               className="h-9 md:h-10 px-3 md:px-4 rounded-full bg-red-100 text-red-600 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-red-200 transition-colors cursor-pointer"
+               className="h-9 md:h-11 px-3 md:px-5 rounded-full bg-red-100 text-red-600 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-red-200 transition-colors cursor-pointer shadow-sm"
              >
                <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-red-600 rounded-full animate-pulse" />
-               <span className="hidden xs:inline">Stop</span>
+               <span>Stop Speech</span>
              </button>
            )}
 
            <button 
              onClick={() => setCurrentPage("home")}
-             className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/60 flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors cursor-pointer sm:hidden"
+             className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-white/60 flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors cursor-pointer"
+             title="Close and Go Home"
            >
              <X size={20} />
            </button>
 
-           <div className="bg-white/40 backdrop-blur-md px-3 md:px-4 py-1.5 md:py-2 rounded-2xl border border-white/60 hidden lg:block">
+           <div className="bg-white/40 backdrop-blur-md px-3 md:px-4 py-1.5 md:py-2 rounded-2xl border border-white/60 hidden xl:block">
               <p className="text-[10px] md:text-xs font-bold text-cyan-600">{profile.languageMix}</p>
            </div>
         </div>
@@ -846,11 +850,18 @@ function NotesView({ notes, setNotes }: { notes: Note[], setNotes: any }) {
       initial={{ opacity: 0, x: 40 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -40 }}
-      className="flex-1 flex flex-col h-full overflow-hidden p-6 md:p-12 pb-32 max-w-6xl mx-auto w-full"
+      className="flex-1 flex flex-col h-full overflow-hidden p-4 md:p-12 pb-32 max-w-6xl mx-auto w-full"
     >
-      <header className="mb-12">
-        <h2 className="text-5xl font-display font-bold text-cyan-950 tracking-tighter">Glacier Notes</h2>
-        <p className="text-slate-500 font-medium mt-2">Personal knowledge archive generated by Mwalimu AI.</p>
+      <header className="mb-8 md:mb-12 pt-8 md:pt-4 flex items-center justify-between">
+         <div className="flex items-center gap-4">
+            <div className="w-12 h-12 md:w-16 md:h-16 bg-cyan-600 rounded-2xl flex items-center justify-center text-white shadow-xl">
+               <NotebookTabs size={28} />
+            </div>
+            <div>
+               <h1 className="text-2xl md:text-4xl font-display font-black text-cyan-950 tracking-tighter">Glacier Library</h1>
+               <p className="text-cyan-700/60 font-bold text-xs md:text-sm">Personal knowledge archive generated by Mwalimu AI.</p>
+            </div>
+         </div>
       </header>
 
       {notes.length === 0 ? (
