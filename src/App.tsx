@@ -10,7 +10,6 @@ import {
   Trash2, Plus, LayoutDashboard, Cpu, CheckCircle2, Circle, Volume2, VolumeX
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { GoogleGenAI } from "@google/genai";
 import ReactMarkdown from "react-markdown";
 
 // --- Constants ---
@@ -51,8 +50,7 @@ interface Message {
   text: string;
 }
 
-// --- AI Setup ---
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+// --- AI Setup removed (now handled on server for security) ---
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>("home");
@@ -150,10 +148,10 @@ export default function App() {
       const fiveMinsAgo = now - 5 * 60 * 1000;
       const recentQuestions = questionLog.filter(ts => ts > fiveMinsAgo);
       
-      if (recentQuestions.length >= 2) {
+      if (recentQuestions.length >= 5) {
         setMessages(prev => [...prev, { 
           role: "ai", 
-          text: "Slow down kidogo rafiki! You've asked 2 questions in the last 5 minutes. Let's finish the lesson content first so we stay on track! Sawa?" 
+          text: "Let's pause the questions for a moment, rafiki! You've asked 5 questions in the last 5 minutes. Let's focus on the lesson content first so we stay on track! Sawa?" 
         }]);
         setLoading(false);
         return;
@@ -167,66 +165,20 @@ export default function App() {
     setInput("");
     setLoading(true);
 
-    let systemPrompt = "";
-    
-    if (tutorMode === "lesson") {
-      const totalSeconds = (profile.studyHours * 3600) + (profile.studyMinutes * 60);
-      systemPrompt = `
-        You are 'Mwalimu AI', performing a Complete Lesson.
-        Student Level: ${profile.educationLevel} (${profile.specificLevel})
-        Subject: ${profile.subjects[0] || "General Science"}
-        Language: ${profile.languageMix}
-        
-        STRICT TIMING RULE:
-        The lesson content MUST be concise enough to be read/presented in EXACTLY ${profile.studyHours} hours and ${profile.studyMinutes} minutes (Total: ${totalSeconds} seconds). 
-        Do not exceed this duration. If the time is short (e.g. 1 minute), be extremely brief but impactful.
-
-        STRICT OUTPUT RULES:
-        1. STRUCTURE: You MUST have a 'Content' section and a 'Questions' section.
-        2. All technical terms in English.
-        3. Use Kenyan analogies.
-        4. The [NOTE] block at the end is MANDATORY. Keep it BRIEF (max 15 words). NO asterisks or markdown symbols inside the [NOTE] block - use plain text that implies emphasis by wording.
-
-        REQUIRED STRUCTURE:
-        ## 🧊 Lesson Content
-        (Detailed explanation with Kenyan analogies)
-        
-        ## 🌍 Real-world Example
-        ...
-        
-        ## 🎯 Practice Questions
-        (Provide 2-3 specific questions for the student to try)
-        
-        ## 🎯 Quick Check
-        ...
-
-        [NOTE]
-        (Brief clean text summary)
-        [/NOTE]
-      `;
-    } else {
-      systemPrompt = `
-        You are 'Mwalimu AI', answering a specific question briefly.
-        Student Level: ${profile.educationLevel} (${profile.specificLevel})
-        Subject: ${profile.subjects[0] || "General Science"}
-
-        Instructions:
-        1. Be precise and bold **important concepts**.
-        2. Format: 
-           ## Background Information
-           (Brief context)
-           ## Answer
-           (Precise answer)
-        3. No [NOTE] block needed for quick questions.
-      `;
-    }
-
     try {
-      const result = await ai.models.generateContent({
-        model: "gemini-3.1-pro-preview",
-        contents: `${systemPrompt}\n\nStudent: ${currentInput}`
+      const response = await fetch("/api/tutor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ input: currentInput, profile, tutorMode })
       });
-      const responseText = result.text || "";
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to get AI response");
+      }
+
+      const data = await response.json();
+      const responseText = data.text || "";
       
       const noteMatch = responseText.match(/\[NOTE\](.*?)\[\/NOTE\]/s);
       if (noteMatch && tutorMode === "lesson") {
@@ -241,9 +193,9 @@ export default function App() {
       if (tutorMode === "lesson") {
         speak(cleanText);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setMessages((prev) => [...prev, { role: "ai", text: "Pole sana rafiki, nimepata error kidogo. Let's try again!" }]);
+      setMessages((prev) => [...prev, { role: "ai", text: err.message || "Pole sana rafiki, nimepata error kidogo. Let's try again!" }]);
     } finally {
       setLoading(false);
     }
