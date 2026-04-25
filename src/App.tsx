@@ -726,33 +726,49 @@ function TutorView({
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-8 space-y-8 scrollbar-hide py-4 w-full max-w-4xl mx-auto">
+      <div className="flex-1 overflow-y-auto px-4 md:px-8 space-y-6 md:space-y-8 scrollbar-hide py-4 w-full max-w-4xl mx-auto">
         {messages.map((m: Message, i: number) => (
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             key={i} 
-            className={`flex items-start gap-4 ${m.role === "user" ? "flex-row-reverse" : "flex-row"}`}
+            className={`flex items-start gap-3 md:gap-4 ${m.role === "user" ? "flex-row-reverse" : "flex-row"}`}
           >
-            <div className={`w-10 h-10 rounded-2xl shadow-lg flex items-center justify-center flex-shrink-0 ${
+            <div className={`w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl shadow-lg flex items-center justify-center flex-shrink-0 ${
               m.role === "user" 
                 ? "glacier-grad text-white" 
                 : "bg-white text-cyan-600 border border-white/60"
             }`}>
-              {m.role === "user" ? <User size={20} /> : <Bot size={20} />}
+              {m.role === "user" ? <User size={16} /> : <Bot size={16} />}
             </div>
             
-            <div className={`max-w-[85%] p-6 rounded-3xl text-sm md:text-base leading-relaxed shadow-xl border overflow-hidden ${
+            <div className={`max-w-[90%] md:max-w-[85%] p-4 md:p-6 rounded-2xl md:rounded-3xl text-sm md:text-base leading-relaxed shadow-xl border overflow-hidden ${
               m.role === "user" 
                 ? "bg-cyan-600 text-white border-cyan-500 rounded-tr-none" 
                 : "bg-white/90 backdrop-blur-md text-slate-800 border-white/80 rounded-tl-none"
             }`}>
               {m.role === "ai" ? (
-                <div className="prose prose-slate prose-sm max-w-none prose-headings:text-cyan-950 prose-headings:font-display prose-headings:mb-2 prose-p:mb-4">
-                  <ReactMarkdown>{m.text}</ReactMarkdown>
+                <div className="flex flex-col gap-3">
+                  <div className="prose prose-slate prose-sm md:prose-base max-w-none prose-headings:text-cyan-950 prose-headings:font-display prose-headings:mb-2 prose-p:mb-4">
+                    <ReactMarkdown>{m.text}</ReactMarkdown>
+                  </div>
+                  <div className="flex items-center gap-2 pt-3 border-t border-slate-100/50 mt-1">
+                    <button 
+                      onClick={() => speak(m.text)}
+                      disabled={isSpeaking}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] uppercase font-black tracking-widest transition-all ${
+                        isSpeaking 
+                          ? "bg-slate-50 text-slate-300" 
+                          : "bg-cyan-50 text-cyan-600 hover:bg-cyan-100 active:scale-95 cursor-pointer"
+                      }`}
+                    >
+                      <Volume2 size={12} />
+                      {isSpeaking ? "Speaking..." : "Read Lesson"}
+                    </button>
+                  </div>
                 </div>
               ) : (
-                m.text
+                <div className="font-bold">{m.text}</div>
               )}
             </div>
           </motion.div>
@@ -761,8 +777,8 @@ function TutorView({
         {loading && (
           <div className="flex flex-col gap-4">
             {tutorMode === "lesson" && <TeacherAnimation isSpeaking={false} profile={profile} />}
-            <div className="flex items-center gap-3 text-xs text-cyan-700 font-black uppercase italic px-4 animate-pulse">
-              <Loader2 className="w-4 h-4 animate-spin" />
+            <div className="flex items-center gap-3 text-[10px] md:text-xs text-cyan-700 font-black uppercase italic px-4 animate-pulse">
+              <Loader2 className="w-3 h-3 md:w-4 md:h-4 animate-spin" />
               Preparing your session...
             </div>
           </div>
@@ -800,11 +816,11 @@ function TutorView({
         <div ref={chatEndRef} />
       </div>
 
-      <div className="p-8 pb-32 md:pb-12 w-full max-w-4xl mx-auto">
+      <div className="p-4 md:p-8 pb-24 md:pb-12 w-full max-w-4xl mx-auto">
         <div className="relative group">
-          <div className="absolute -inset-1 bg-gradient-to-r from-cyan-300 to-blue-400 rounded-[2.5rem] blur opacity-25 group-hover:opacity-40 transition duration-1000 group-focus-within:opacity-50"></div>
+          <div className="absolute -inset-1 bg-gradient-to-r from-cyan-300 to-blue-400 rounded-[1.5rem] md:rounded-[2.5rem] blur opacity-25 group-hover:opacity-40 transition duration-1000 group-focus-within:opacity-50"></div>
           <input 
-            className="relative w-full bg-white/95 backdrop-blur-2xl border-none p-6 pr-20 rounded-[2rem] shadow-2xl outline-none focus:ring-4 focus:ring-cyan-500/10 transition-all font-bold text-lg placeholder:text-slate-300"
+            className="relative w-full bg-white/95 backdrop-blur-2xl border-none p-4 md:p-6 pr-16 md:pr-20 rounded-[1.2rem] md:rounded-[2rem] shadow-2xl outline-none focus:ring-4 focus:ring-cyan-500/10 transition-all font-bold text-sm md:text-lg placeholder:text-slate-300"
             placeholder={tutorMode === "lesson" ? "What topic are we studying?" : "Ask your question..."}
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -813,9 +829,9 @@ function TutorView({
           <button 
             onClick={handleSend}
             disabled={loading || !input.trim()}
-            className="absolute right-3 top-3 bottom-3 aspect-square bg-cyan-600 text-white rounded-[1.5rem] flex items-center justify-center hover:bg-cyan-500 transition-all shadow-lg active:scale-90 disabled:opacity-50 disabled:active:scale-100 cursor-pointer disabled:cursor-not-allowed"
+            className="absolute right-2 md:right-3 top-2 md:top-3 bottom-2 md:bottom-3 aspect-square bg-cyan-600 text-white rounded-lg md:rounded-[1.5rem] flex items-center justify-center hover:bg-cyan-500 transition-all shadow-lg active:scale-90 disabled:opacity-50 disabled:active:scale-100 cursor-pointer disabled:cursor-not-allowed"
           >
-            <Send size={24} />
+            <Send size={18} className="md:w-6 md:h-6" />
           </button>
         </div>
       </div>
