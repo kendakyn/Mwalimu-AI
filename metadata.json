@@ -1,0 +1,10 @@
+{
+  "name": "Mwalimu AI",
+  "description": "A Kenyan STEM tutor using localized analogies and code-switching (English + Swahili + Sheng) to explain complex concepts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "AI-Powered Tutoring",
+    "Multi-lingual Support",
+    "Kenyan Curriculum Alignment"
+  ]
+}
